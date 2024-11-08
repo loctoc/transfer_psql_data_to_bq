@@ -5,4 +5,4 @@ FROM node:22-alpine
 WORKDIR /usr/src/app
 
 # Define the command to run the application
-RUN npx transfer_psql_data_to_bq --help
+RUN npx -y transfer_psql_data_to_bq --help

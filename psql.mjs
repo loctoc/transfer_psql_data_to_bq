@@ -2,12 +2,13 @@ import pg from 'pg';
 import Cursor from "pg-cursor";
 
 const { Client } = pg;
-
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
 });
 
-await client.connect();
+if (process.env.DATABASE_URL) {
+  await client.connect();
+}
 
 export async function runQueryWithCursor(query, cb) {
   const cursor = client.query(new Cursor(query));
