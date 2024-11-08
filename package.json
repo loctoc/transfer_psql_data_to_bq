@@ -1,6 +1,6 @@
 {
   "name": "transfer_psql_data_to_bq",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.mjs",
   "bin": {
@@ -11,7 +11,7 @@
   },
   "keywords": [],
   "author": "Kishore Renangi<kishorer@knownuggets.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@google-cloud/bigquery": "^7.9.1",
     "axios": "^1.7.7",
