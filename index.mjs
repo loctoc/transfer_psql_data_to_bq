@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { readFileSync } from "fs";
 import { createTable } from "./createTable.mjs";
 import { runQueryWithCursor } from "./psql.mjs";
+import axios from "axios";
 
 const program = new Command();
 
@@ -27,7 +28,7 @@ program
     console.log("");
     console.log("Example call:");
     console.log(
-      "  $ npx transfer_psql_data_to_bq --sa-file path/to/keyfile.json --project-id my-project --dataset-id my-dataset --table-id my-table --schema-file path/to/schema.json --truncate --create-table --transfer-data --slack-notify-url https://hooks.slack.com/services/your/slack/webhook --query 'SELECT * FROM your_table'"
+      "  $ DATABASE_URL=<connection-string> npx transfer_psql_data_to_bq --sa-file path/to/keyfile.json --project-id my-project --dataset-id my-dataset --table-id my-table --schema-file path/to/schema.json --truncate --create-table --transfer-data --slack-notify-url https://hooks.slack.com/services/your/slack/webhook --query 'SELECT * FROM your_table'"
     );
   })
   .parse(process.argv);
@@ -53,19 +54,20 @@ if (options.createTable) {
   });
   console.timeEnd("createTable");
 } else if (options.transferData && options.query) {
+  const startTime = new Date();
   const slackMessage = [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `PSQL to BQ Destination project: ${options.projectId}, dataset: ${options.datasetId}, table: ${options.tableId}`,
+        text: `PSQL data sync to BQ \`${options.projectId}.${options.datasetId}.${options.tableId}\``,
       },
     },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `Started At: ${new Date().toISOString()}`,
+        text: `Started At: *${startTime.toISOString()}*`,
       },
     },
   ];
@@ -90,7 +92,7 @@ if (options.createTable) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `Rows: ${rowCount}`,
+        text: `Rows: *${rowCount}*`,
       },
     });
 
@@ -105,11 +107,15 @@ if (options.createTable) {
     console.timeEnd("loadJSONToBigQuery");
 
     console.log("Data transferred successfully.");
+    const endTime = new Date();
+    const duration = (endTime - startTime) / 1000; // duration in seconds
     slackMessage.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `Finished At: ${new Date().toISOString()}`,
+        text: `Finished At: ${endTime.toISOString()} - in ${duration.toFixed(
+          2
+        )} seconds`,
       },
     });
     slackMessage.push({
@@ -127,18 +133,22 @@ if (options.createTable) {
       error,
       error.stack
     );
+    const endTime = new Date();
+    const duration = (endTime - startTime) / 1000; // duration in seconds
     slackMessage.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `Finished At: ${new Date().toISOString()}`,
+        text: `Finished At: ${endTime.toISOString()} in *${duration.toFixed(
+          2
+        )} seconds*`,
       },
     });
     slackMessage.push({
       type: "section",
       text: {
-        type: "mrkdwn",
-        text: `Error: ${error.message}`,
+      type: "mrkdwn",
+      text: `*Error:* <!channel> \`${error.message}\``,
       },
     });
     await sendSlackMessage(slackMessage);
@@ -146,13 +156,28 @@ if (options.createTable) {
   }
 }
 
-async function sendSlackMessage(body) {
+async function sendSlackMessage(blocks) {
   if (options.slackNotifyUrl) {
-    await axios.post(options.slackNotifyUrl, body, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const body = {
+      blocks,
+    };
+    try {
+      await axios.post(
+        options.slackNotifyUrl,
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "An error occurred while sending Slack notification:",
+        error,
+        error.stack
+      );
+    }
   }
 }
 
