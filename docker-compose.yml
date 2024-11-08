@@ -1,0 +1,10 @@
+services:
+  transfer_psql_data_to_bq:
+    build: .
+    platform: linux/amd64
+    image: transfer_psql_data_to_bq:latest
+    command: npx transfer_psql_data_to_bq --help
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    
