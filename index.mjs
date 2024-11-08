@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { BigQuery } from "@google-cloud/bigquery";
 import fs from "fs";
 import { Command } from "commander";
