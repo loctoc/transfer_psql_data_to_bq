@@ -1,6 +1,6 @@
 {
   "name": "transfer_psql_data_to_bq",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "",
   "main": "index.mjs",
   "bin": {
@@ -8,7 +8,10 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build": "docker-compose up --build"
+    "docker:build": "docker compose up --build",
+    "docker:tag": "docker tag transfer_psql_data_to_bq:latest ceeshore/transfer_psql_data_to_bq:latest",
+    "docker:push": "docker push ceeshore/transfer_psql_data_to_bq:latest",
+    "postpublish": "npm run docker:build && npm run docker:tag && npm run docker:push"
   },
   "keywords": [],
   "author": "Kishore Renangi<kishorer@knownuggets.com>",
